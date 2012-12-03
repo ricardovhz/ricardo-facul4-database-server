@@ -9,6 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import request.QueuedRequestExecutor;
+import request.RequestExecutor;
 
 /**
  *
@@ -36,12 +38,14 @@ public abstract class AbstractService extends Thread implements Service {
         try {
             ServerSocket server = new ServerSocket(port);
             System.out.println("Pess. ctrl-c to quit");
+            QueuedRequestExecutor mainThread = new QueuedRequestExecutor();
+            mainThread.start();
 
             while (true) {
                 logger.info("Waiting for connection on port "+port+"...");
                 Socket socket = server.accept();
                 logger.info("connected to "+socket.getRemoteSocketAddress());
-                new request.RequestExecutor(socket, connection).start();
+                new RequestExecutor(connection, socket, mainThread).start();
             }
             
         } catch (IOException ex) {

@@ -5,6 +5,8 @@
 package interpreter;
 
 import connection.Connection;
+import java.io.IOException;
+import java.net.Socket;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -17,16 +19,22 @@ import java.util.logging.Logger;
 public class OneWayInterpreter extends AbstractInterpreter {
 
     @Override
-    public String interpret(String expression) {
+    public synchronized void interpret() {
         java.sql.Connection conn = null;
         try {
             conn = connection.getConnection();
             PreparedStatement stm = conn.prepareStatement(expression);
             stm.executeUpdate();
-            return "OK";
-        } catch (SQLException ex) {
+            socket.getOutputStream().write("OK\n".getBytes());
+        } catch (IOException ex) {
             Logger.getLogger(OneWayInterpreter.class.getName()).log(Level.SEVERE, null, ex);
-            return "FAIL:" + ex.getMessage();
+        } catch (SQLException ex) {
+//            Logger.getLogger(OneWayInterpreter.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                socket.getOutputStream().write(("FAIL:" + ex.getMessage()+"\n").getBytes());
+            } catch (IOException e) {
+                Logger.getLogger(OneWayInterpreter.class.getName()).log(Level.SEVERE, null, e);
+            }
         } finally {
             if (conn != null) {
                 try {
@@ -35,10 +43,18 @@ public class OneWayInterpreter extends AbstractInterpreter {
                     Logger.getLogger(OneWayInterpreter.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+            if (socket!=null) {
+                try {
+                    socket.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(OneWayInterpreter.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
 
-    public OneWayInterpreter(Connection connection) {
-        super(connection);
+    public OneWayInterpreter(Connection connection, String expression, Socket socket) {
+        super(connection, expression, socket);
     }
+
 }

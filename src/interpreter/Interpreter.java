@@ -9,5 +9,6 @@ package interpreter;
  * @author desenv01
  */
 public interface Interpreter {
-    public String interpret(String expression);
+    public void interpret();
+    public String getStatement();
 }

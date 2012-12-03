@@ -4,6 +4,7 @@
  */
 package main;
 
+import interpreter.InterpreterExecutor;
 import service.MysqlService;
 
 /**
@@ -16,6 +17,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+//        InterpreterExecutor.initThreads();
         new MysqlService().start();
     }
 }
